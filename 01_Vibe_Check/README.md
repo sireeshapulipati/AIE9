@@ -139,24 +139,21 @@ Follow these steps to prepare and submit your homework:
     git push origin main
     ```
 2. **IMPORTANT:** Start Cursor from the `01_Prototyping_Best_Practices_and_Vibe_Check` folder (you can also use the _File -> Open Folder_ menu option of an existing Cursor window)
-3. Create a branch of your `AIE9` repo to track your changes. Example command: `git checkout -b s01-assignment`
-4. Edit this `README.md` file (the one in your `AIE9/01_Prototyping_Best_Practices_and_Vibe_Check` folder)
-5. Complete all three Activities:
+3. Edit this `README.md` file (the one in your `AIE9/01_Prototyping_Best_Practices_and_Vibe_Check` folder)
+4. Complete all three Activities:
     - **Activity #1:** Evaluate your system using the general vibe checking questions and define the "Aspect Tested" for each
     - **Activity #2:** Test your assistant with personal prompts it should be able to answer
     - **Activity #3:** Test your assistant with prompts requiring additional capabilities
-6. Provide answers to all three Questions (`❓Question #1`, `❓Question #2`, `❓Question #3`)
-7. Add, commit and push your modified `README.md` to your origin repository.
+5. Provide answers to all three Questions (`❓Question #1`, `❓Question #2`, `❓Question #3`)
+6. Add, commit and push your modified `README.md` to your origin repository's main branch.
 
->(NOTE: You should not merge the new document into origin's main branch. This will spare you from update challenges for each future session.)
-
-When submitting your homework, provide the GitHub URL to the tracking branch (for example: `s01-assignment`) you created on your AIE9 repo.
+When submitting your homework, provide the GitHub URL to your AIE9 repo.
 
 ### The Advanced Build:
-1. Follow all of the steps (Steps 1 - 7) of the Main Assignment above
+1. Follow all of the steps (Steps 1 - 6) of the Main Assignment above
 2. Document what you changed and the results you saw in the `Adjustments Made:` and `Results:` sections of the Advanced Build
 3. Add, commit and push your additional modifications to this `README.md` file to your origin repository.
 
 When submitting your homework, provide the following on the form:
-+ The GitHub URL to the tracking branch (for example: `s01-assignment`) you created on your AIE9 repo.
++ The GitHub URL to your AIE9 repo.
 + The public Vercel URL to your updated Challenge project on your AIE9 repo.
