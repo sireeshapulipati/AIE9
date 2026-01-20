@@ -118,13 +118,17 @@ Please make adjustments to your application that you believe will improve the vi
 #### 🏗️ Activity #1
 ##### Adjustments Made:
 - _describe adjustment(s) here_
+Updated the system prompt to:
+- Require GitHub-flavored Markdown responses
+- Use headings, subheadings, bullet lists, numbered lists, and short paragraphs
+- Handle unrelated questions: decline to answer, state the system's purpose/expertise, and provide 3-5 example mental health questions
 
 ##### Results:
 1. _Comment here how the change(s) impacted the vibe check of your system_
-2.
-3.
-4.
-5.
+2. When an related question is asked, it doesn't answer it. rather states its purpose, gives reasons why it it's not answering my question, gives me example questions to ask; 
+3. When I prompted with "What can I cook with milk and bread?", in addition to the above content, it also provided related mental health response - "If meal planning feels overwhelming....", which I find very interesting. Maybe because the system prompt includes - you are a supportive mental coach??
+4. The responses are well formatted and easy to read; not a wall of text like earlier
+5. It did answer the "help me think through pros and cons.." questions though. Is it really related to its scope? - stress, motivation, habits, confidence. Hmm!
 
 
 ## Submitting Your Homework
