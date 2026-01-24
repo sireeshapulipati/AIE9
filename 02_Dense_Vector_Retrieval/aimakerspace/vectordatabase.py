@@ -33,19 +33,19 @@ class VectorDatabase:
         self,
         query_vector: np.array,
         k: int,
-        distance_measure: Callable = euclidean_distance,
+        distance_measure: Callable = cosine_similarity,
     ) -> List[Tuple[str, float]]:
         scores = [
             (key, distance_measure(query_vector, vector))
             for key, vector in self.vectors.items()
         ]
-        return sorted(scores, key=lambda x: x[1], reverse=False)[:k]
+        return sorted(scores, key=lambda x: x[1], reverse=True)[:k]
 
     def search_by_text(
         self,
         query_text: str,
         k: int,
-        distance_measure: Callable = euclidean_distance,
+        distance_measure: Callable = cosine_similarity,
         return_as_text: bool = False,
     ) -> List[Tuple[str, float]]:
         query_vector = self.embedding_model.get_embedding(query_text)
