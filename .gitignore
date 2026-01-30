@@ -1,6 +1,14 @@
 .DS_Store
 .env
 content/
+<<<<<<< HEAD
 .claude/
 __pycache__/
 *.pyc
+=======
+__pycache__/
+*.pyc
+.langgraph_api/
+.venv
+uv.lock
+>>>>>>> 3f6d82650bb8ea927ed1b1526f543b699f9cea9c
