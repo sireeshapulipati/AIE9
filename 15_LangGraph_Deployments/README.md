@@ -70,21 +70,40 @@ What is the key architectural difference between the `simple_agent` and `agent_w
 
 ##### Answer:
 
+**Architectural difference:** In `simple_agent`, the graph stops as soon as the agent returns a final answer. In `agent_with_helpfulness`, the graph adds a helpfulness check before stopping: after the agent answers, it evaluates whether the response is sufficiently helpful for the user's question.
+
+**How the loop works:** After each agent reply, the helpfulness node compares the initial query and the latest response. If it decides the response is helpful, the graph ends. If not, it sends that decision back to the agent and lets it try again.
+
+**Loop prevention:** The graph stops the loop by checking how many messages are in the conversation. Once there are more than 10 messages, it skips the helpfulness check, adds a stop token (`HELPFULNESS:END`), and ends the run. That means only a few helpfulness cycles are allowed before a forced exit, so the loop cannot run forever.
 
 
 #### Question 2:
 What is the role of `langgraph.json` in the LangGraph Deployments? Describe each of its key fields and how the platform uses this file to discover and serve your graphs.
 
 ##### Answer:
+`langgraph.json` is the Langgraph platform configuration file. It tells LangGraph where graphs live, which Python version to use, how to load env vars, and what assistants to expose.
 
+**Key fields:**
+
+- **`version`**: Schema version for `langgraph.json`. Lets the platform interpret the file correctly.
+- **`dependencies`**: Paths used to install dependencies. The platform runs `uv sync` or similar so all needed packages are installed before serving.
+- **`env`**: Path to the env file. Those variables are loaded when the server starts.
+- **`python_version`**:  Target Python version so the platform uses the correct interpreter.
+- **`graphs`**: Maps graph IDs to Python import paths. The platform imports each entry to discover and load the compiled graph.
+- **`assistants`**: Human-facing assistant definitions. Each assistant has a `graph_id` linking it to a graph, plus `name` and `description`.
+
+**Discovery and serving:** At startup, the platform reads `langgraph.json`, imports the graph objects listed in `graphs`, and serves them by graph ID. 
+
+The `assistants` block defines how each graph is exposed (e.g. in Studio or via API), with `graph_id` tying each assistant to its graph. The server then handles requests for those assistants and runs the corresponding graph.
 
 
 #### Activity #1:
 Create your own agent graph! Build a new graph in `app/graphs/` with a custom evaluation node (e.g., a vibe checker, a fact verifier, a summarizer — get creative!). Register it in `langgraph.json`, serve it with `uv run langgraph dev`
 
 ##### Answer:
+Added a new graph that appends a TL;DR at the beginning of the response.
 
-
+![LangGraph Studio with summarizer agent](langgraph-studio-summarizer.png)
 
 # Ship 🚢
 
