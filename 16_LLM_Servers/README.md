@@ -83,7 +83,9 @@ What is the difference between serverless and dedicated endpoints?
 
 #### ✅ Answer:
 
-_(insert your answer here)_
+Serverless endpoints use shared capacity: compute is provided on demand and you are charged only for actual usage (e.g., tokens or requests). Capacity scales automatically, but you don’t reserve any resources.
+
+Dedicated endpoints reserve capacity for your workload: you pay for the machine or capacity while it’s running, regardless of whether you use it. You get predictable performance and isolation, but you pay even when there’s no traffic.
 
 ### ❓ Question #2:
 
@@ -91,7 +93,11 @@ Why is it important to consider token throughput and latency when choosing an LL
 
 #### ✅ Answer:
 
-_(insert your answer here)_
+Responsiveness drives user experience in user-facing apps. Latency (time until the first token) matters because long waits make the app feel slow. 
+
+Token throughput (tokens per second) matters when there are long outputs or large contexts, so responses stream smoothly instead of stalling. 
+
+Choosing for both helps ensure the app feels fast and responsive, not sluggish or laggy.
 
 ## Activity 1: RAGAS Evaluation with Cost Analysis
 

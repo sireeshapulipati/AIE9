@@ -3,7 +3,8 @@
 This module builds an in-memory RAG pipeline that:
 - Loads PDF documents from `RAG_DATA_DIR` (default: "data").
 - Splits documents into chunks using a token-aware splitter.
-- Embeds chunks with OpenAI and stores vectors in an in-memory Qdrant store.
+- Embeds chunks and generates answers via Fireworks AI or OpenAI (provider-selectable).
+- Stores vectors in an in-memory Qdrant store.
 - Exposes a LangChain Tool `retrieve_information` that retrieves relevant
   context and generates a response constrained to that context.
 """
@@ -40,9 +41,11 @@ class _RAGState(TypedDict):
     response: str
 
 
-def _build_rag_graph(data_dir: str):
+def _build_rag_graph(data_dir: str, provider: str = "fireworks"):
     """Construct and compile a minimal RAG graph.
-
+    Args:
+        data_dir: directory containing the PDF documents
+        provider: provider to use for the embeddings and generation model
     Steps:
     1) Load PDFs from `data_dir` recursively (best-effort).
     2) Split documents into token-aware chunks.
@@ -68,13 +71,19 @@ def _build_rag_graph(data_dir: str):
     chunks = text_splitter.split_documents(documents) if documents else []
 
     # Embeddings and vector store (in-memory Qdrant)
-    embedding_model = OpenAIEmbeddings(
-        model=os.environ.get("FIREWORKS_EMBEDDING_MODEL", "accounts/fireworks/models/qwen3-embedding-8b"),
-        openai_api_key=os.environ["FIREWORKS_API_KEY"],
-        openai_api_base="https://api.fireworks.ai/inference/v1",
-        check_embedding_ctx_length=False,
-        dimensions=4096,
-    )
+    if provider == "fireworks":
+        embedding_model = OpenAIEmbeddings(
+            model=os.environ.get("FIREWORKS_EMBEDDING_MODEL", "accounts/fireworks/models/qwen3-embedding-8b"),
+            openai_api_key=os.environ["FIREWORKS_API_KEY"],
+            openai_api_base="https://api.fireworks.ai/inference/v1",
+            check_embedding_ctx_length=False,
+            dimensions=4096,
+        )
+    elif provider == "openai":
+        embedding_model = OpenAIEmbeddings(
+            model=os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+            openai_api_key=os.environ["OPENAI_API_KEY"],
+        )
     qdrant_vectorstore = QdrantVectorStore.from_documents(
         documents=chunks,
         embedding=embedding_model,
@@ -86,15 +95,21 @@ def _build_rag_graph(data_dir: str):
     # Prompt and model
     human_template = (
         "\n#CONTEXT:\n{context}\n\nQUERY:\n{query}\n\n"
-        "Use the provide context to answer the provided user query. "
+        "Use the provided context to answer the user query. "
         "Only use the provided context to answer the query. If you do not know the answer, or it's not contained in the provided context respond with \"I don't know\""
     )
     chat_prompt = ChatPromptTemplate.from_messages([("human", human_template)])
-    generator_llm = ChatOpenAI(
-        model=os.environ.get("FIREWORKS_CHAT_MODEL", "accounts/fireworks/models/gpt-oss-20b"),
-        openai_api_key=os.environ["FIREWORKS_API_KEY"],
-        openai_api_base="https://api.fireworks.ai/inference/v1",
-    )
+    if provider == "fireworks":
+        generator_llm = ChatOpenAI(
+            model=os.environ.get("FIREWORKS_CHAT_MODEL", "accounts/fireworks/models/gpt-oss-20b"),
+            openai_api_key=os.environ["FIREWORKS_API_KEY"],
+            openai_api_base="https://api.fireworks.ai/inference/v1",
+        )
+    elif provider == "openai":
+        generator_llm = ChatOpenAI(
+            model=os.environ.get("OPENAI_CHAT_MODEL", "gpt-4.1-mini"),
+            openai_api_key=os.environ["OPENAI_API_KEY"],
+        )
 
     def retrieve(state: _RAGState) -> _RAGState:
         retrieved_docs = retriever.invoke(state["question"]) if retriever else []
@@ -113,11 +128,11 @@ def _build_rag_graph(data_dir: str):
     return graph_builder.compile()
 
 
-@lru_cache(maxsize=1)
-def _get_rag_graph():
+@lru_cache(maxsize=2)
+def _get_rag_graph(provider: str = "fireworks"):
     """Return a cached compiled RAG graph built from RAG_DATA_DIR."""
     data_dir = os.environ.get("RAG_DATA_DIR", "data")
-    return _build_rag_graph(data_dir)
+    return _build_rag_graph(data_dir, provider)
 
 
 @tool
@@ -131,3 +146,36 @@ def retrieve_information(
     if isinstance(result, dict) and "response" in result:
         return result["response"]
     return result
+
+
+def run_rag_pipeline(question: str, provider: str = "fireworks") -> dict:
+    """Run the RAG pipeline and return contexts + answer for RAGAS evaluation.
+
+    Args:
+        question: The user question.
+        provider: "fireworks" or "openai".
+
+    Returns:
+        Dict with "contexts" (list of retrieved doc strings) and "answer" (generated response).
+    """
+    graph = _get_rag_graph(provider)
+    config = {
+        "tags": [f"provider:{provider}"],
+        "metadata": {"provider": provider},
+        "run_name": f"rag-{provider}",
+    }
+    result = graph.invoke({"question": question}, config=config)
+
+    contexts = []
+    if isinstance(result, dict) and "context" in result:
+        for doc in result["context"]:
+            if hasattr(doc, "page_content"):
+                contexts.append(doc.page_content)
+            elif isinstance(doc, str):
+                contexts.append(doc)
+
+    answer = ""
+    if isinstance(result, dict) and "response" in result:
+        answer = result["response"]
+
+    return {"contexts": contexts, "answer": answer}
